@@ -2,7 +2,9 @@
 #include <WiFi.h>
 
 const char* ssid     = "ssid";
-const char* password = "passwordgit";
+const char* password = "password";
+
+WiFiServer server(80);
 
 void setup() {
   // start serial connection
@@ -21,7 +23,6 @@ void setup() {
       delay(500);
       Serial.print(".");
   }
-  
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
@@ -30,11 +31,63 @@ void setup() {
   Serial.println();
   Serial.println();
   Serial.println();
- 
+
+  // start server
+  server.begin();
+  Serial.println("Server started");
+  Serial.println();
+}
+
+
+void sendHttpResponse(WiFiClient client) {
+  // HTTP header
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:text/html");
+  client.println();
+
+  // HTTP content
+  client.print("Hello world!");
+
+  // HTTP response end
+  client.println();
 }
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // listen for incoming connections
+  WiFiClient client = server.available();
+
+  if (client) {
+    Serial.println("New client");
+    String incommingLine = "";
+
+    while (client.connected()) {
+      // if there is something to read from client
+      if (client.available()) {
+        // read char
+        char c = client.read();
+
+        // if byte is newline char
+        if (c == '\n') {
+          if (incommingLine.length() == 0) {
+            // second newline => end of HTTP request
+            Serial.println();
+            sendHttpResponse(client);
+            break;
+          }
+        // cariage return
+        } else if (c == '\r') {
+          Serial.println(incommingLine);
+          incommingLine = "";
+        // other byte
+        } else {
+          incommingLine += c;
+        }
+      }
+    }
+
+    // close the connection:
+    client.stop();
+  }
 
 }
