@@ -10,6 +10,13 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ80
 const char* ssid     = "ssid";
 const char* password = "password";
 
+struct RGB {
+  byte r;
+  byte g;
+  byte b;
+};
+
+
 WiFiServer server(80);
 
 void setup() {
@@ -68,6 +75,26 @@ void sendHttpResponse(WiFiClient client) {
   client.println();
 }
 
+RGB getRGBParamsFromRequest(String incommingLine) {
+  RGB rgb;
+  // incommingLine format: GET /10/12/14/ HTTP/1.1
+  incommingLine = incommingLine.substring(5);
+  int index = incommingLine.indexOf(" ");
+  String parameters = incommingLine.substring(0, index);
+  // Split into parameters
+  // format: 10/12/14/
+  RGB tmp_rgb;
+  index = incommingLine.indexOf("/");
+  tmp_rgb.r = byte(incommingLine.substring(0, index).toInt());
+  incommingLine = incommingLine.substring(index+1);
+  index = incommingLine.indexOf("/");
+  tmp_rgb.g = byte(incommingLine.substring(0, index).toInt());
+  incommingLine = incommingLine.substring(index+1);
+  index = incommingLine.indexOf("/");
+  tmp_rgb.b = byte(incommingLine.substring(0, index+1).toInt());
+
+  return tmp_rgb;
+}
 
 void loop() {
   // listen for incoming connections
@@ -94,6 +121,12 @@ void loop() {
         // cariage return
         } else if (c == '\r') {
           Serial.println(incommingLine);
+          RGB rgb = getRGBParamsFromRequest(incommingLine);
+          // set color
+          for(int i=0; i<NUMPIXELS; i++) {
+            pixels.setPixelColor(i, pixels.Color(rgb.r,rgb.g,rgb.b));
+            pixels.show();
+          }
           incommingLine = "";
         // other byte
         } else {
