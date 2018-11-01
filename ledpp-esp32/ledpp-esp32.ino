@@ -1,5 +1,11 @@
 
 #include <WiFi.h>
+#include <Adafruit_NeoPixel.h>
+
+#define PIN 5
+#define NUMPIXELS 10
+
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 const char* ssid     = "ssid";
 const char* password = "password";
@@ -13,6 +19,16 @@ void setup() {
   Serial.println();
   Serial.println();
   Serial.println();
+
+  // init NeoPixels lib
+  Serial.println("Init NeoPixels lib");
+  pixels.begin();
+
+  // set color
+  for(int i=0; i<NUMPIXELS; i++) {
+    pixels.setPixelColor(i, pixels.Color(150,150,150));
+    pixels.show();
+  }
 
   // start wifi connection
   Serial.print("Connecting to ");
@@ -89,5 +105,4 @@ void loop() {
     // close the connection:
     client.stop();
   }
-
 }
